@@ -160,6 +160,15 @@ const dummyInputLoop = (depth: number, id: string): ChartNode[] | null => {
 };
 /* ############### End of test logic ############### */
 
+type ChartNodeType = 0 | 1 | 2 | 3 | 4;
+/* ChartNodeType
+        0 for start node,
+        1 for end node, as many as breath(horizontal levels) ,
+        2 for single child,
+        3 for left child,
+        4 for right child,
+    */
+
 /* CharNode.id logic
           0
      00      01
@@ -171,14 +180,7 @@ interface ChartNode {
     id: string;
     name: string;
     children: ChartNode[] | null;
-    type: 0 | 1 | 2 | 3 | 4;
-    /* type
-        0 for start node,
-        1 for end node, as many as breath(horizontal levels) ,
-        2 for single child,
-        3 for left child,
-        4 for right child,
-    */
+    type: ChartNodeType;
 }
 
 /* Component to return UI node element
@@ -203,8 +205,16 @@ const CharNodeEl = (
     <div
         style={{
             display: 'flex',
+            flexShrink: 0,
             flexFlow: 'column',
             alignItems: 'center',
+            // alignItems: 'stretch',
+            // textAlign: 'center',
+            // alignContent: 'center',
+            width: input.type === 3 || input.type === 4 ? '50%' : 'max-content',
+            // width: 'max-content',
+            // flexBasis: input.type === 3 || input.type === 4 ? '50%' : 'initial',
+            // flex: input.type === 3 || input.type === 4 ? '50' : 'initial',
         }}
     >
         {/* connectorWrapper manages ui for branching lines */}
@@ -221,13 +231,17 @@ const CharNodeEl = (
             {input.type === 3 || input.type === 4 ? (
                 <div
                     className='vh2'
-                    style={{ alignSelf: input.type === 3 ? 'end' : 'start' }}
+                    style={{
+                        alignSelf: input.type === 3 ? 'end' : 'start',
+                    }}
                 ></div>
             ) : null}
             {input.type === 3 || input.type === 4 ? (
                 <div
                     className='hr'
-                    style={{ alignSelf: input.type === 3 ? 'end' : 'start' }}
+                    style={{
+                        alignSelf: input.type === 3 ? 'end' : 'start',
+                    }}
                 ></div>
             ) : null}
             {input.type !== 0 ? <div className='vh'></div> : null}
@@ -236,8 +250,12 @@ const CharNodeEl = (
             style={{
                 backgroundColor: 'blueviolet',
                 margin: '0 5px',
+                // margin: '0 auto',
                 textAlign: 'center',
                 padding: '10px',
+                // flexShrink: 0,
+                // // width: 'max-content',
+                // minWidth: '100px',
             }}
         >
             <span style={{ color: 'lightgray' }}>{input.id}</span> {input.name}
@@ -248,6 +266,7 @@ const CharNodeEl = (
                 ? handler(input.children, onDragOver, onDrop)
                 : null}
         </div>
+        {/* </div> */}
     </div>
 );
 
@@ -260,6 +279,28 @@ const preview = (
     return (
         <>{input.map((el) => CharNodeEl(el, preview, onDragOver, onDrop))}</>
     );
+};
+/* Function to update id in the sub tree recurcively
+    chartNode: subtree that needs modification,
+    newAdditionToid: new addition in between the id based on where the new node was added'
+        Updation with new value, where new value is allways zero as child only one node is added at a time, not two nodes together,
+    depth: position in id where new element is added.
+    eg: id 0112324 get a new node X at 01123X24, there for updated id of example node is 01123<0>24
+*/
+const updateAllChildNodeIds = (
+    chartdNode: ChartNode,
+    newAdditionToid: string,
+    depth: number
+): void => {
+    if (chartdNode.children) {
+        for (let item of chartdNode.children) {
+            updateAllChildNodeIds(item, newAdditionToid, depth);
+            item.id =
+                item.id.slice(0, depth) +
+                newAdditionToid +
+                item.id.slice(depth, item.id.length);
+        }
+    }
 };
 
 function App() {
@@ -282,14 +323,14 @@ function App() {
 
     React.useEffect(() => {
         /* Test logic: Uncomment with/ to use dummyInputLoop */
-        setChartNode([
-            {
-                id: '0',
-                name: '' + 7,
-                children: dummyInputLoop(7, '0'),
-                type: 0,
-            },
-        ]);
+        // setChartNode([
+        //     {
+        //         id: '0',
+        //         name: '' + 7,
+        //         children: dummyInputLoop(7, '0'),
+        //         type: 0,
+        //     },
+        // ]);
         /* End of test logic comment */
     }, []);
 
@@ -298,10 +339,14 @@ function App() {
     to 'dropped on' element */
     const onDragStart = (
         event: React.DragEvent<HTMLDivElement>,
-        name: string
+        config: { name: string; type: 0 | 1 }
+        /* config.type
+            1 for normal item in the flowchart,
+            2 for adding a conditional split in flowchart,
+        */
     ) => {
         if (event.dataTransfer) {
-            event.dataTransfer.setData('name', name);
+            event.dataTransfer.setData('config', JSON.stringify(config));
         }
     };
 
@@ -317,35 +362,96 @@ function App() {
     update component state to reflect changes in UI*/
     const onDrop = (event: React.DragEvent<HTMLDivElement>, id: string) => {
         if (event.dataTransfer) {
-            /* Fetch set data from draggable lement */
-            let name = event.dataTransfer.getData('name');
+            /* Fetch set data from draggable elment */
+            const { name, type } = JSON.parse(
+                event.dataTransfer.getData('config')
+            );
             /* Get the current element from the ui node tree using id to modify component state*/
-            const element = id
-                .split('')
-                .reduce(
-                    (final, el) =>
-                        final && final[parseInt(id, 10)].children
-                            ? final[parseInt(el, 10)].children
-                            : final
-                            ? [final[parseInt(id, 10)]]
-                            : null,
-                    chartNode
-                );
-            /* Add element to the lst node for adding a node at the end(user case) */
-            if (element && element.length === 1) {
-                const transferName = element[0].name;
-                element[0].name = name;
-                element[0].type = 2;
-                element[0].children = [
-                    ...[
-                        {
-                            id: element[0].id + '0',
-                            name: transferName,
-                            children: null,
-                            type: 1,
-                        },
-                    ],
-                ] as ChartNode[];
+            const element = id.split('').reduce(
+                (
+                    final: { nodes: ChartNode[] | null; dir: null | number },
+                    el,
+                    i,
+                    arr
+                ) => {
+                    if (i === arr.length - 1) {
+                        return { nodes: final.nodes, dir: parseInt(el, 10) };
+                    } else {
+                        return {
+                            nodes:
+                                final &&
+                                final.nodes &&
+                                final.nodes[parseInt(el, 10)].children,
+                            dir: null,
+                        };
+                    }
+                },
+                { nodes: chartNode, dir: null }
+            );
+            /* Direction to identify left or right node */
+            const { resultArray, direction } = {
+                resultArray: element.nodes,
+                direction: element.dir,
+            };
+            if (
+                resultArray &&
+                (resultArray.length === 1 || resultArray.length === 2)
+            ) {
+                let node = null;
+                /* Direction '1' for right node, '0' for left node */
+                if (direction && direction === 1) {
+                    node = resultArray[direction];
+                } else {
+                    node = resultArray[0];
+                }
+                /* Change data from existing node to data from draggable element */
+                const transferName: string = node.name;
+                const transferChildren: ChartNode[] | null = node.children;
+                /* assignNode takes the value of current node and adds it as a child node */
+                let assignChildren: ChartNode[] | null = [];
+                node.name = name;
+                if (type === 0) {
+                    assignChildren = [
+                        ...[
+                            {
+                                id: node.id + '0',
+                                name: transferName,
+                                children: transferChildren
+                                    ? transferChildren
+                                    : null,
+                                type: transferChildren ? 2 : 1,
+                            },
+                        ],
+                    ] as ChartNode[];
+                } else if (type === 1) {
+                    assignChildren = [
+                        ...[
+                            {
+                                id: node.id + '0',
+                                name: transferName,
+                                children: transferChildren
+                                    ? transferChildren
+                                    : null,
+                                type: 3,
+                            },
+                            {
+                                id: node.id + '1',
+                                name: 'end',
+                                children: null,
+                                type: 4,
+                            },
+                        ],
+                    ] as ChartNode[];
+                }
+                node.children = assignChildren;
+                /* Update ids of all following chilren nodes to reflect addition of parent */
+                if (node?.children[0]?.children) {
+                    updateAllChildNodeIds(
+                        node.children[0],
+                        '0',
+                        resultArray[0].id.length
+                    );
+                }
             }
             /* Update state immutabily to refect changes in state in UI rendering */
             setChartNode([...(chartNode as [])]);
@@ -360,10 +466,21 @@ function App() {
                 </h4>
                 <div
                     className='dragableBox'
-                    onDragStart={(event) => onDragStart(event, 'Item')}
+                    onDragStart={(event) =>
+                        onDragStart(event, { name: 'Item', type: 0 })
+                    }
                     draggable
                 >
                     Item
+                </div>
+                <div
+                    className='dragableBox'
+                    onDragStart={(event) =>
+                        onDragStart(event, { name: 'Condition', type: 1 })
+                    }
+                    draggable
+                >
+                    Condition
                 </div>
                 <br />
             </div>

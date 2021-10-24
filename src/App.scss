@@ -3,10 +3,12 @@
     height: 100vh;
     color: antiquewhite;
     display: flex;
+    flex-shrink: 0;
     .left {
         width: 20%;
         height: 100%;
         display: flex;
+        flex-shrink: 0;
         flex-flow: column;
         align-items: center;
         padding: 2%;
@@ -15,6 +17,9 @@
             background-color: darkcyan;
             text-align: center;
             padding: 5px;
+        }
+        & > * {
+            margin-bottom: 10px;
         }
     }
     .right {
@@ -30,11 +35,15 @@
             display: flex;
             flex-flow: column;
             align-items: center;
+            & > * {
+                flex-shrink: 0;
+            }
         }
     }
     .connectorWrapper {
         width: 100%;
         display: flex;
+        flex-shrink: 0;
         flex-flow: column;
         align-items: center;
     }

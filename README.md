@@ -55,7 +55,6 @@ Open [`http://localhost:3000`](http://localhost:3000) on browser.
 
 ## To Do
 
--   Add logic to drag and drop elements anywhere in the tree and not just the end,
 -   Add remove node logic - on clicking a node open modal, with edit enabled and delete node option
 -   Beautify asthetics
 -   Editable node content
