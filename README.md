@@ -1,5 +1,5 @@
-![Screenshot](screenshot_0.jpg)
-![Screenshot](screenshot_1.jpg)
+![Screenshot](screenshot_0.JPG)
+![Screenshot](screenshot_1.JPG)
 
 # React: drag and drop flow chart editor
 
