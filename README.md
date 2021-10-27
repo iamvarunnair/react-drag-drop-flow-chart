@@ -12,13 +12,11 @@ A Tree based flowchart with only condition and sequential flows
 -   `Tree based UI`
 -   `Drag and drop elements from a side shelf`
 -   `Built using React hooks with typescript and scss`
--   `Custom logic, not dependent on 3rd party packages for flowcart`
+-   `Custom logic, not dependent on 3rd party packages for flowchart`
 
 #
 
 ## Tech and Dependencies
-
-#
 
 A react app that needs node to run
 
