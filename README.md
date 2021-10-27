@@ -20,7 +20,7 @@ A Tree based flowchart with only condition and sequential flows
 
 #
 
-A tiny, minimalist single page django server that needs python to run
+A react app that needs node to run
 
 -   [Node 14.15](https://nodejs.org/en/)
 -   [React 17](https://reactjs.org/)
@@ -55,12 +55,10 @@ Open [`http://localhost:3000`](http://localhost:3000) on browser.
 
 ## To Do
 
--   Add remove node logic - on clicking a node open modal, with edit enabled and delete node option
+-   Add remove node logic - on clicking a node, open a modal, with edit enabled and delete node option
 -   Beautify asthetics
 -   Editable node content
 -   On hover show placeholder for soon-to-be-dropped element
-
-#
 
 #
 
